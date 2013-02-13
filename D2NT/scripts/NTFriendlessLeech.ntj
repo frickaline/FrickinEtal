@@ -18,7 +18,7 @@ var disconnectedRetry      	= 5;			// time in minutes to retry on a disconnectio
 var cdkeyInUseRetry      	= 1;			// time in minutes to retry on a cdkey in use error message (set to 0 to stop)
 var connectingToBnetTimeout  	= 20000;		// time in milliseconds to wait for a login to time out and click cancel and retry
 var characterScreenTimeout   	= 5000;			// time in milliseconds to wait for character screen to appear
-var pleaseWaitTimeout     	= 20000;			// time in milliseconds to wait for a please wait popup
+var pleaseWaitTimeout     	= 2000;			// time in milliseconds to wait for a please wait popup
 var createGameThreshold      	= 2000;			// time in milliseconds to wait between making games
 var createGameThresholdRandom   = 500;			// time in milliseconds to randomly add +/- to the game create time
 var createGameTimeout      	= 15000;		// time in milliseconds to register a failed to create game
@@ -64,6 +64,7 @@ var retry = 0;
 var fullretry = maxRetries;
 var samegame = new Array(gamenames.length); // Empty array for however many runs you might be following (default 6)
 var ftjcount = 0;
+var pwcount = 0;
 
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
@@ -439,13 +440,14 @@ function locationAction(location)
 			break;
 
 		case 25: // Lobby - Please Wait
-		locationTimeout(pleaseWaitTimeout, location);
-		locationAction(controlData.getLocation());
-		if (location.id == 25) {
+		pwcount++;
+		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
+			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
+		if (pwcount > 10) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
-		break;
+		break;	
 
 		case 26: // Lobby - Game Name Exists
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Game already exists.", 0);
@@ -479,6 +481,7 @@ function locationAction(location)
 		}
         break;
 	}
+	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)

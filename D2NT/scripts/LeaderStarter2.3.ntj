@@ -61,7 +61,7 @@ var disconnectedRetry		= 5;		// time in minutes to retry on a disconnection (usu
 var cdkeyInUseRetry		= 5;		// time in minutes to retry on a cdkey in use error message (set to 0 to stop)
 var connectingToBnetTimeout	= 20000;	// time in milliseconds to wait for a login to time out and click cancel and retry
 var characterScreenTimeout	= 10000;	// time in milliseconds to wait for character screen to appear
-var pleaseWaitTimeout		= 20000;	// time in milliseconds to wait for a please wait popup
+var pleaseWaitTimeout		= 50000;	// time in milliseconds to wait for a please wait popup
 var createGameThreshold		= 10000;		// time in milliseconds to wait between making games
 var createGameThresholdRandom	= 1000;		// time in milliseconds to randomly add +/- to the game create time
 var createGameTimeout		= 44000;	// time in milliseconds to register a failed to create game
@@ -112,6 +112,7 @@ var tempDelay = Random(waitBeforeNextLineChatMin, waitBeforeNextLineChatMax);
 var gameInfo = "";
 var bugignor = true;
 var ftjcount = 0;
+var pwcount = 0;
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
 Include("libs/common/NTLogger.ntl");
@@ -472,14 +473,14 @@ function locationAction(location)
 		break;
 
 	case 25: // Lobby - Please Wait
-		locationTimeout(pleaseWaitTimeout, location);
-		locationAction(controlData.getLocation());
-		if (location.id == 25) {
+		pwcount++;
+		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
+			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
+		if (pwcount > 10) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
-		break;
-
+		break;	
 	case 26: // Lobby - Game Name Exists
 		sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Game already exists", 0);
 
@@ -514,6 +515,7 @@ function locationAction(location)
 		break;
 	}
 	DebugInOOG("Location : "+location.id);
+	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)

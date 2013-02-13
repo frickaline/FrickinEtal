@@ -156,6 +156,7 @@ var _leaderOfflineTick = -LeaderOfflineDelay;
 var _leaderInChatTick = -LeaderInChatDelay;
 var _GameIsFullTick = -GameIsFullDelay;
 var ftjcount = 0;
+var pwcount = 0;
 
 function NTMain()
 {
@@ -611,13 +612,14 @@ function locationAction(location)
         break;
 
     case 25: // Lobby - Please Wait
-		locationTimeout(pleaseWaitTimeout, location);
-		locationAction(controlData.getLocation());
-		if (location.id == 25) {
+		pwcount++;
+		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
+			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
+		if (pwcount > 10) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
-		break;
+		break;	
 
     case 26: // Lobby - Game Name Exists
         sendEventToOOG(D2NT_MGR_PRINT_LOG, "yE00000Game already exists", 0);
@@ -654,6 +656,7 @@ function locationAction(location)
         break;
     }
     DebugInOOG("Location : "+location.id);
+	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)
