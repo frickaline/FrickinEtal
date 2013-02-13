@@ -803,6 +803,18 @@ function NT_LoadConfig()
 	NTConfig_CheckMercSafe = ['01'];
 
 	//------------------------------------------------------------------------------
+	// NTLogger Settings
+	//------------------------------------------------------------------------------
+	// Log files are placed in the directory scripts/logs/Logger
+	
+	var NTConfig_LoggingEnabled = true; 				// enable/disable this feature
+	var NTConfig_Log_Level = 1; 						// 0 : Debug, 1 : Info, 2 : Warning, 2 : Error; With respect to general logging
+	var NTConfig_Item_Level = 1; 						// 0 : Debug, 1 : Info, 2 : Warning, 2 : Error; With respect to item logging
+	var NTConfig_TwelveHourClock = false;				// military (false) or 12 hour (true) clock timestamping on log messages
+	var NTConfig_maxLogSize = 10000000;					// if log file exceeds this size, file will be over-written.
+														// if you wish to preserve data, move these files once in a while to a new filename
+	
+	//------------------------------------------------------------------------------
 	// Class Specific Settings
 	//------------------------------------------------------------------------------
 }

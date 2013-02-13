@@ -482,3 +482,10 @@ var NTConfig_Announcer;
 var NTConfig_LevelMin;
 var NTConfig_Output;
 var NTConfig_LogIt;
+
+// NTLogger
+var NTConfig_LoggingEnabled;
+var NTConfig_TwelveHourClock;
+var NTConfig_maxLogSize;
+var NTConfig_Log_Level;
+var NTConfig_Item_Level;
