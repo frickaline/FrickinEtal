@@ -2,6 +2,8 @@
 
 function NTMain() {
 	Include("libs/common/NTLogger.ntl");
+	NTC_IncludeConfig("NTBot/char_configs");
+	NT_LoadConfig();
 	if (NTConfig_LoggingEnabled) {
 		Print(COLOR_4 + "LogHandler: " + COLOR_2 + " registered");
 		//NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_2 + "NTLogHandler: registered");
