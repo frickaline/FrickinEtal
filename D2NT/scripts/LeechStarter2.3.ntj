@@ -120,7 +120,7 @@ if(fastJoin) {
 } else {
 	var connectingToBnetTimeout    = 20000;
 	var characterScreenTimeout     = 10000;
-	var pleaseWaitTimeout          = 10000;
+	var pleaseWaitTimeout          = 20000;
 	var createGameThreshold        = 10000;
 	var createGameThresholdRandom  = 1000;
 	var createGameTimeout          = 15000;
@@ -655,17 +655,19 @@ function locationAction(location)
         break;
 
     case 25: // Lobby - Please Wait
-        if(!locationTimeout(pleaseWaitTimeout, location))
-            controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
-        break;
+		locationTimeout(pleaseWaitTimeout, location);
+		locationAction(controlData.getLocation());
+		if (location.id == 25) {
+			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
+			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
+		}
+		break;
 
     case 26: // Lobby - Game Name Exists
         sendEventToOOG(D2NT_MGR_PRINT_LOG, "yE00000Game already exists", 0);
-
         inGameAt = 0;
         lastGameStatus = 0;
         setNextGameMake();
-
         locationTimeout(15000, location);
         break;
 

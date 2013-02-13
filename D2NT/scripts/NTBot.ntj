@@ -47,7 +47,7 @@ var disconnectedRetry		= 5;		// time in minutes to retry on a disconnection (usu
 var cdkeyInUseRetry		= 5;		// time in minutes to retry on a cdkey in use error message (set to 0 to stop)
 var connectingToBnetTimeout	= 20000;	// time in milliseconds to wait for a login to time out and click cancel and retry
 var characterScreenTimeout	= 10000;	// time in milliseconds to wait for character screen to appear
-var pleaseWaitTimeout		= 10000;	// time in milliseconds to wait for a please wait popup
+var pleaseWaitTimeout		= 20000;	// time in milliseconds to wait for a please wait popup
 var createGameThreshold		= 5000;		// time in milliseconds to wait between making games
 var createGameThresholdRandom	= 1000;		// time in milliseconds to randomly add +/- to the game create time
 var createGameTimeout		= 45000;	// time in milliseconds to register a failed to create game
@@ -436,8 +436,12 @@ function locationAction(location)
 		break;
 
 	case 25: // Lobby - Please Wait
-		if(!locationTimeout(pleaseWaitTimeout, location))
-			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
+		locationTimeout(pleaseWaitTimeout, location);
+		locationAction(controlData.getLocation());
+		if (location.id == 25) {
+			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
+			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
+		}
 		break;
 
 	case 26: // Lobby - Game Name Exists
