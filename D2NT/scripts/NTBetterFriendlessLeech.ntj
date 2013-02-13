@@ -134,36 +134,11 @@ function NTMain()
 		}
 		else
 		{
-			Delay(500);
+
 			if (_ingame)
 			{
 				_ingame = false;
-
-				// --------------------------
-				// Prevent NT from closing D2
-				// --------------------------
-
-				// Wait for lobby or lobby chat
-				var _location;
-				do
-				{
-					_location = controlData.getLocation();
-					Delay(50);
-				}
-				while (_location.id != 3 && _location.id != 1);
-
-				if (_location.id == 3) // Lobby Chat
-				{
-					// We need to go somewhere besides the lobby chat so NT can type crap and think its creating a game
-					Delay(100);
-					Say("/join " + getRandomString(Random(3,10)));
-					Delay(1000);
-				}
-				sendEventToOOG(D2NT_MGR_CREATE_GAME, _location.name, 0);
-				outputGameLength();
-				setNextGameMake();
-				// --------------------------
-
+				
 				sendEventToOOG(D2NT_MGR_READY, "", 0);
 			}
 
@@ -341,6 +316,7 @@ function locationAction(location)
 
 		case 4: // Create Game
 			break;
+
 
 		case 5: // Join Game
 			if (game != "")
