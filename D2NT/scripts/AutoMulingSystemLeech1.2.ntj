@@ -98,7 +98,7 @@ var cdkeyInUseRetry            = 5;
 // interface delays (milliseconds)
 var connectingToBnetTimeout    = 20000;
 var characterScreenTimeout     = 10000;
-var pleaseWaitTimeout          = 10000;
+var pleaseWaitTimeout          = 20000;
 var createGameThreshold        = 10000;
 var createGameThresholdRandom  = 1000;
 var createGameTimeout          = 15000;
