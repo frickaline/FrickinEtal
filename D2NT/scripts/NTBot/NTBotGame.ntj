@@ -1,6 +1,6 @@
 var CurScriptIndex = 0;
 var LastScript = false;
-var Rev = "56.f12";
+var Rev = "56.f11";
 
 // Provalone Edit //
 //Include("libs/common/NTExp.ntl");
@@ -18,6 +18,11 @@ var checkActOnce = false;
 function D2NTStatus(where, time, message) { return SendCopyData('D2NT Manager', null, where << 16 | time, message); }
 function NTMain()
 {
+	Include("libs/common/NTCommon.ntl");
+	Include("libs/common/NTLogger.ntl");
+	NTC_IncludeLibs();
+	NTC_IncludeConfig("NTBot/char_configs");
+	
 	if (!Load("NTBot/tools/NTLogHandler.ntj")) {
 		NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_1 + "Error: Logger failed to initialize");
 	}
@@ -27,9 +32,7 @@ function NTMain()
 
 	//Print(COLOR_4 + "[+] NTBot 4.2 [+]");
 
-	Include("libs/common/NTCommon.ntl");
-	NTC_IncludeLibs();
-	NTC_IncludeConfig("NTBot/char_configs");
+
 	Include("libs/common/NTExp.ntl");
 
 	/*if(!NT_LoadConfig()){
@@ -466,6 +469,7 @@ function NT_ScriptMsgEvents(msg)
 			LastScript = true;
 		break;
 	}
+	//Delay(100);
 }
 
 function NT_ClearMessages(){ // leech improvemetst

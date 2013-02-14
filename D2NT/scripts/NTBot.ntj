@@ -35,7 +35,7 @@ var timemessage 			= "in about";				// This will come after your pw and befor th
 //       Minimum Game Length:       //
 //////////////////////////////////////
 
-var gameMinLength		= 180000;	// time in milliseconds, minimum game length, 180 seconds default (1 game/3 minutes)
+var gameMinLength		= 20000;	// time in milliseconds, minimum game length, 180 seconds default (1 game/3 minutes)
 
 ////////////////////////////////////////
 //        Connection Settings:        //
@@ -47,7 +47,7 @@ var disconnectedRetry		= 5;		// time in minutes to retry on a disconnection (usu
 var cdkeyInUseRetry		= 5;		// time in minutes to retry on a cdkey in use error message (set to 0 to stop)
 var connectingToBnetTimeout	= 20000;	// time in milliseconds to wait for a login to time out and click cancel and retry
 var characterScreenTimeout	= 10000;	// time in milliseconds to wait for character screen to appear
-var pleaseWaitTimeout		= 20000;	// time in milliseconds to wait for a please wait popup
+var pleaseWaitTimeout		= 20;	// time in seconds to wait for a please wait popup
 var createGameThreshold		= 5000;		// time in milliseconds to wait between making games
 var createGameThresholdRandom	= 1000;		// time in milliseconds to randomly add +/- to the game create time
 var createGameTimeout		= 45000;	// time in milliseconds to register a failed to create game
@@ -94,9 +94,13 @@ var bugignor = true;
 var ftjcount = 0;
 var pwcount = 0;
 
+Include("libs/common/NTCommon.ntl");
+Include("libs/common/NTLogger.ntl");
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
+
 var controlData = new controlInfo();
+NTLG_Log(NTLG_TYPE_LOG);   // initialize the log file
 
 function NTMain()
 {
@@ -124,28 +128,30 @@ function NTMain()
 				{
 					_ingame = true;
 
-					if(me.playtype > 0)
+					if(me.playtype > 0) {
+						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game[IP:" + me.gameserverip.split(".")[3] + "]");
 						sendEventToOOG(D2NT_MGR_INGAME, "In Game[IP:" + me.gameserverip.split(".")[3] + "]", 0);
-					else
+					} else {
+						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game");
 						sendEventToOOG(D2NT_MGR_INGAME, "In Game", 0);
+					}
 
 					lastGameStatus = 2; // in game successful
 				}
 			}
 
 			Delay(1000);
+			NTLG_FlushLogQueue();
 		}
 		else
 		{
 			if(_ingame)
 			{
 				_ingame = false;
-
+				NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Out of Game");
 				sendEventToOOG(D2NT_MGR_READY, "", 0);
 			}
-
 			locationAction(controlData.getLocation());
-
 			Delay(500);
 		}
 	}
@@ -439,12 +445,12 @@ function locationAction(location)
 
 	case 25: // Lobby - Please Wait
 		pwcount++;
-		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
-			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
-		if (pwcount > 10) {
+		sendEventToOOG(D2NT_MGR_PRINT_STATUS, location.name, 0);
+		if (pwcount > pleaseWaitTimeout) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
+		Delay(500);
 		break;	
 
 	case 26: // Lobby - Game Name Exists
@@ -478,11 +484,13 @@ function locationAction(location)
 		}
 		break;
 	}
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, "current location: "+location.id);
 	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)
 {
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, statusString);
 	return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
 }
 

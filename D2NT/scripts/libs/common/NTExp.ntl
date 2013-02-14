@@ -99,7 +99,7 @@ function NTE_ComputeStats(chickenFlag) {
 
 	if (!chickenFlag) {
         // Messages to Console
-		NTC_SendLogToOOG(NTC_LOG_COMMON, PercToMax + ";" +
+		NTC_SendLogToOOGOnly(NTC_LOG_COMMON, PercToMax + ";" +
 		COLOR_1 + "--------------------------------------------------" +
 		LvLProgXP +
         COLOR_4 + "\n Character Level: " + COLOR_2 + _endLvl +

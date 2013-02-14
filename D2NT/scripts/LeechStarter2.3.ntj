@@ -99,7 +99,7 @@ if(fastJoin) {
 	// interface delays (milliseconds)
 	var connectingToBnetTimeout    = 20000;
 	var characterScreenTimeout     = 10000;
-	var pleaseWaitTimeout          = 10000;
+	var pleaseWaitTimeout          = 20;
 	var createGameThreshold        = 10000;
 	var createGameThresholdRandom  = 1000;
 	var createGameTimeout          = 15000;
@@ -120,7 +120,7 @@ if(fastJoin) {
 } else {
 	var connectingToBnetTimeout    = 20000;
 	var characterScreenTimeout     = 10000;
-	var pleaseWaitTimeout          = 20000;
+	var pleaseWaitTimeout          = 20;
 	var createGameThreshold        = 10000;
 	var createGameThresholdRandom  = 1000;
 	var createGameTimeout          = 15000;
@@ -174,10 +174,13 @@ var sayChatMsgAfterGame = false;
 var ftjcount = 0;
 var pwcount = 0;
 
+Include("libs/common/NTCommon.ntl");
+Include("libs/common/NTLogger.ntl");
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
 
 var controlData = new controlInfo();
+NTLG_Log(NTLG_TYPE_LOG);   // initialize the log file
 
 var increaseGameCount = true;
 var firstTimeFl = true;
@@ -236,6 +239,7 @@ function NTMain()
             }
 
             Delay(1000);
+			NTLG_FlushLogQueue();
         }
         else
         {
@@ -657,12 +661,12 @@ function locationAction(location)
 
     case 25: // Lobby - Please Wait
 		pwcount++;
-		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
-			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
-		if (pwcount > 10) {
+		sendEventToOOG(D2NT_MGR_PRINT_STATUS, location.name, 0);
+		if (pwcount > pleaseWaitTimeout) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
+		Delay(500);
 		break;
 
     case 26: // Lobby - Game Name Exists
@@ -698,11 +702,13 @@ function locationAction(location)
         break;
     }
     DebugInOOG("Location : "+location.id);
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, "current location: "+location.id);
 	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)
 {
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, statusString);
     return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
 }
 
@@ -894,4 +900,3 @@ function NT_RetrievenextGame() { // to retrieve game and pw
 	return;
 }
 // so now we need to add code to get the next game and pw as well as check it against the last game
-

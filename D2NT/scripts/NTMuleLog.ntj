@@ -30,7 +30,7 @@ var disconnectedRetry		= 5;		// time in minutes to retry on a disconnection (usu
 var cdkeyInUseRetry		= 5;		// time in minutes to retry on a cdkey in use error message (set to 0 to stop)
 var connectingToBnetTimeout	= 20000;	// time in milliseconds to wait for a login to time out and click cancel and retry
 var characterScreenTimeout	= 10000;	// time in milliseconds to wait for character screen to appear
-var pleaseWaitTimeout		= 10000;	// time in milliseconds to wait for a please wait popup
+var pleaseWaitTimeout		= 20;	// time in seconds to wait for a please wait popup
 var createGameThreshold		= 5000;		// time in milliseconds to wait between making games
 var createGameThresholdRandom	= 1000;		// time in milliseconds to randomly add +/- to the game create time
 var createGameTimeout		= 45000;	// time in milliseconds to register a failed to create game
@@ -74,9 +74,12 @@ var lastGameFailed = false;
 var tempDelay = Random(waitBeforeNextLineChatMin, waitBeforeNextLineChatMax);
 var gameInfo = "";
 var bugignor = true;
+Include("libs/common/NTCommon.ntl");
+Include("libs/common/NTLogger.ntl");
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
 var controlData = new controlInfo();
+NTLG_Log(NTLG_TYPE_LOG);   // initialize the log file
 var muleIndex = 0;
 var relog = false;
 var retoon = false;
@@ -114,9 +117,10 @@ function NTMain()
 				if(Load("NTBot/bots/NTMuleLogging.ntj"))
 				{
 					_ingame = true;
-
+					NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game");
 					sendEventToOOG(D2NT_MGR_INGAME, "In Game", 0);
 					Delay(500);
+					NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Successfully logged: "+logTheseMules[muleIndex][0]+"/"+me.charname);
 					sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_8 + "Successfully logged: "+logTheseMules[muleIndex][0]+"/"+me.charname, 0); 
 					
 					lastGameStatus = 2; // in game successful
@@ -124,6 +128,7 @@ function NTMain()
 					if (muleIndex >= logTheseMules.length) {
 						done=true; 	
 						Delay(500); 
+						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "NTMuleLog Complete.");
 						sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_2 + "NTMuleLog Complete.", 0); 
 						Print(COLOR_2 + "NTMuleLog Complete.");
 						break;
@@ -142,13 +147,14 @@ function NTMain()
 			if(_ingame)
 			{
 				_ingame = false;
-
+				NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Out of game");
 				sendEventToOOG(D2NT_MGR_READY, "", 0);
 			}
 			if (muleIndex >= logTheseMules.length) {
 				done=true; 	
 				Delay(500); 
 				sendEventToOOG(D2NT_MGR_PRINT_STATUS, "Done.", 0);
+				NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "NTMuleLog Complete.");
 				sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_2 + "NTMuleLog Complete.", 0); 
 				break;
 			}
@@ -402,12 +408,14 @@ function locationAction(location)
 
 	case 25: // Lobby - Please Wait
 		pwcount++;
-		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
-			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
-		if (pwcount > 10) {
+		sendEventToOOG(D2NT_MGR_PRINT_STATUS, location.name, 0);
+
+
+		if (pwcount > pleaseWaitTimeout) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
+		Delay(500);
 		break;
 
 	case 26: // Lobby - Game Name Exists
@@ -441,11 +449,13 @@ function locationAction(location)
 		}
         break;	
 	}
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, "current location: "+location.id);
 	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)
 {
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, statusString);
 	return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
 }
 

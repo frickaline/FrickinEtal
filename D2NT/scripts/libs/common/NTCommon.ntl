@@ -1,4 +1,5 @@
 Include("libs/common/NTColorConverter.ntl");
+Include("libs/common/NTColorConverter.ntl");
 // Public D2BS constants
 Include("NTBot/char_configs/NTConfig__Global.ntl");
 // Character Class
@@ -296,6 +297,7 @@ function NTC_IncludeConfig(filepath, createCharConfigsOverride)
 function NTC_IncludeLibs()
 {
 	Include("libs/common/NTAttack.ntl");
+	Include("libs/common/NTLogger.ntl");
 	Include("libs/common/NTCubing.ntl");
 	Include("libs/common/NTItemParser.ntl");
 	Include("libs/common/NTMove.ntl");
@@ -841,6 +843,12 @@ function NTC_WaitIdleMode()
 }
 
 function NTC_SendLogToOOG(type, logString)
+{
+	NTLG_Log(type, NTLG_LEVEL_ERROR, logString);
+	return SendCopyData("D2NT Manager", null, 9<<16|type, logString);
+}
+
+function NTC_SendLogToOOGOnly(type, logString)
 {
 	return SendCopyData("D2NT Manager", null, 9<<16|type, logString);
 }

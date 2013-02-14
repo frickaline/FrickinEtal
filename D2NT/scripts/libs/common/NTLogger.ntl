@@ -1,4 +1,4 @@
-﻿Include("libs/common/NTCommon.ntl");
+﻿// Global log variable
 var _NTLG_LogList = new Array();
 
 // Logger Message Types
@@ -16,7 +16,7 @@ const NTLG_LEVEL_ITEM_RARE = 2;
 const NTLG_LEVEL_ITEM_CRAFT = 3;
 const NTLG_LEVEL_ITEM_UNIQUE = 4;
 
-// Delimeter - log msgs are of the format: scriptname, ticks, type, level, msg separated by NTLG_DELIM
+// Delimeter - log msgs are of the format: ticks, type, level, msg separated by NTLG_DELIM
 const NTLG_DELIM = "%"
 const NTLG_DELIM_REPLACE = "percent"
 
@@ -26,14 +26,17 @@ const NTLG_LOGLIMIT = 1000;
 // Internal send to script buffer size
 const maxbufferlength = 63;
 
-function NTLG_Log (scriptname, type, level, msg) {
-	if (arguments.length > 4) {
-		sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "NTLG: log message dropped, too many arguments", 0);
+function NTLG_Log (type, level, msg) {
+	if (arguments.length > 3 || arguments.length == 2 || arguments.length < 1) {
+		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLG: log message dropped, wrong arguments");
 		return;
 	}
-	ticks = GetTickCount();
-	msg = scriptname + ": " + msg;
-	if (arguments.length == 3) msg = "";
+	date = new Date();
+	ticks = date.getTime();
+	if (arguments.length == 1) {
+		level = 99;
+		msg = "";
+	}
 	regex = new RegExp(NTLG_DELIM, "g");
 	msg = msg.replace(regex, NTLG_DELIM_REPLACE);
 	maxmsglength = maxbufferlength - (3 * String(NTLG_DELIM).length) - String(ticks).length - String(type).length - String(level).length;
@@ -41,71 +44,87 @@ function NTLG_Log (scriptname, type, level, msg) {
 		msgTrunc = msg.substr(0,maxmsglength);
 		msgTrunc = msgTrunc.replace(/^\s+|\s+$/g, "");
 		msg = msg.substr(maxmsglength);
-		NTLG_LogEvent(scriptname, ticks, type, level, msgTrunc);
+		NTLG_LogEvent(ticks, type, level, msgTrunc);
 	}
 	msg = msg.replace(/^\s+|\s+$/g, "");
-	NTLG_LogEvent(scriptname, ticks, type, level, msg);
+	NTLG_LogEvent(ticks, type, level, msg);
 }
 
-function NTLG_LogEvent(scriptname, ticks, type, level, msg) {
+function NTLG_LogEvent(ticks, type, level, msg) {
 	logged = NTC_SendMsgToScript("NTLogHandler.ntj", ticks + NTLG_DELIM + type + NTLG_DELIM + level + NTLG_DELIM + msg);
-	if (!logged) NTLG_QueueLogEvent(scriptname, ticks, type, level, msg);
+	if (!logged) NTLG_QueueLogEvent(ticks, type, level, msg);
 }
 
-function NTLG_QueueLogEvent(scriptname, ticks, type, level, msg) {
+function NTLG_QueueLogEvent(ticks, type, level, msg) {
 	var _entry = new Array();
 	_entry.push(msg);
 	_entry.push(level);
 	_entry.push(type);
 	_entry.push(ticks);
-	_entry.push(scriptname);
 	_NTLG_LogList.push(_entry);
 }
 
 function NTLG_FlushLogQueue() {
 	if (_NTLG_LogList.length > NTLG_LOGLIMIT) {
-		NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_1 + "NTLG_FlushLogQueue: buffered length exceeds limit, flushing "+ _NTLG_LogList.length +" messages");
+		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLG_FlushLogQueue: buffered length exceeds limit, flushing "+ _NTLG_LogList.length +" messages");
 		NTLG_EmergencyFlushLogQueue();
+		return;
 	}
 	_logList = _NTLG_LogList;
 	_NTLG_LogList = new Array();
 	for(i = 0 ; i < _logList.length ; i++) {
-		scriptname = _logList[i].pop();
 		ticks = _logList[i].pop();
 		type = _logList[i].pop();
 		level = _logList[i].pop();
 		msg = _logList[i].pop();
-		NTLG_LogEvent(scriptname, ticks, type, level, msg);
+		NTLG_LogEvent(ticks, type, level, msg);
 	}
 }
 
 function NTLG_EmergencyFlushLogQueue() {
+	date = new Date();
+	now = date.getTime();
 	_logList = _NTLG_LogList;
 	_NTLG_LogList = new Array();
+	filename = "logs/Logger/" + me.account + "-" + me.charname + "-item.txt";
+	NTLG_LogLine(filename, now, 3, "NTLG_EmergencyFlushLogQueue: buffered length exceeds limit, flushing "+ _logList.length +" messages");
 	for(i = 0 ; i < _logList.length ; i++) {
-		scriptname = _logList[i].pop();
 		ticks = _logList[i].pop();
 		type = _logList[i].pop();
 		level = _logList[i].pop();
 		msg = _logList[i].pop();
-		time = NTLG_TimeStamp(parseInt(log[1]));
-		NTLG_Logline("logs/Logger/flush-"+ticks+".txt", time, type, level, msg);
+		time = NTLG_TimeStamp(ticks);
+		NTLG_LogLine(filename, ticks, level, msg);
 	}
 }
 
-function NTLG_LogLine(filename, time, level, message) {
+function NTLG_LogLine(filename, ticks, level, message) {
 	file = FileOpen(filename, 2);
+	time = NTLG_TimeStamp(ticks);
 	file.WriteLine(time + ": " + level + ": " + message);
 	file.Close();
 }
 
+function NTLG_InitLog(filename, ticks) {
+	file = FileOpen(filename, 2);
+	time = NTLG_TimeStamp(ticks);
+	if (file.size == 0) {
+		SendCopyData("D2NT Manager", null, 9<<16, COLOR_2 + "NTLogHandler: Log Created: " + filename);
+		file.WriteLine(time + ": " + "Created");	
+	}
+	if (file.size > NTConfig_maxLogSize) {
+		file.Close();
+		SendCopyData("D2NT Manager", null, 9<<16, COLOR_1 + "NTLogHandler: Log Initialized: " + filename);
+		file = FileOpen(filename, 1);
+		file.WriteLine(time + ": " + "Initialized");	
+	}
+	file.Close();
+}
+
 function NTLG_TimeStamp(ticks) {
-	var currentSmallTicks = GetTickCount();
-	var tickDiff = currentSmallTicks - ticks;
+	if (NTConfig_TwelveHourClock == 'undefined') var NTConfig_TwelveHourClock = false;
 	var time = new Date();
-	var currentBigTicks = time.getTime();
-	var adjustedTime = currentBigTicks - tickDiff;
-	time.setTime(adjustedTime);
+	time.setTime(ticks);
 	var hour   = time.getHours();
 	var minute = time.getMinutes();
 	var second = time.getSeconds();
@@ -128,13 +147,18 @@ function NTLG_TimeStamp(ticks) {
 	return timeString;
 }
 
-function InitLog(filename, time) {
-	file = FileOpen(filename, 2);
-	if (file.size > NTConfig_maxLogSize) {
-		file.Close();
-		SendCopyData("D2NT Manager", null, 9<<16, COLOR_1 + "NTLogHandler: Log Initialized: " + filename);
-		file = FileOpen(filename, 1);
-		file.WriteLine(time + ": " + "Initialized");	
+function NTLG_Error(type, msg) {
+	SendCopyData("D2NT Manager", null, 9<<16|type, msg);
+	return;
+}
+
+function NTLG_FormatAndLogLine(filename, ticks, level, message) {
+	NTLG_Error(0, "foo: "+message);
+	var color="0";
+	if (message.match(/^ÿc/)) {
+		color = message.substring(2).substring(0,1);
+		message = message.substring(3);
 	}
-	file.Close();
+	if (color=="1") level = 3; else level = 1;
+	NTLG_LogLine(filename, ticks, level, message);
 }
