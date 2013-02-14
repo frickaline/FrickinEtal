@@ -1471,7 +1471,8 @@ function NTU_DeathLog(Corpses, InitLife) {
 	logMessage += COLOR_8 + "\n Starting Life: " + InitLife;
 	logMessage += COLOR_4 + "\n Time: " + _time;
 	logMessage += COLOR_1 + "\n --------------------------------------------------";
-	NTC_SendLogToOOG(NTC_LOG_COMMON, logMessage);
+	NTC_SendLogToOOGOnly(NTC_LOG_COMMON, logMessage);
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Death");
 }
 
 function NTU_MercReviveLog() {
@@ -1479,11 +1480,12 @@ function NTU_MercReviveLog() {
 	var areaName = "unknown area";
 	if (_area) areaName = _area.name;
 	var _time = NTU_timeStamp();
-	NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_8 + "Mercenary Revived " + ";" +
+	NTC_SendLogToOOGOnly(NTC_LOG_COMMON, COLOR_8 + "Mercenary Revived " + ";" +
 	COLOR_1 + "--------------------------------------------------" +
 	COLOR_8 + "\n Mercenary revived in " + areaName +
 	COLOR_4 + "\n Time: " + _time +
 	COLOR_1 + "\n --------------------------------------------------");
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Mercenary Revive");
 }
 
 function NTU_MercDeathLog() {
@@ -1491,11 +1493,12 @@ function NTU_MercDeathLog() {
 	var areaName = "unknown area";
 	if (_area) areaName = _area.name;
 	var _time = NTU_timeStamp();
-	NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_8 + "Mercenary Death Log " + ";" +
+	NTC_SendLogToOOGOnly(NTC_LOG_COMMON, COLOR_8 + "Mercenary Death Log " + ";" +
 	COLOR_1 + "--------------------------------------------------" +
 	COLOR_8 + "\n Mercenary died in " + areaName +
 	COLOR_4 + "\n Time: " + _time +
 	COLOR_1 + "\n --------------------------------------------------");
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Mercenary Death");
 }
 
 function NTU_ChickenLog(_type) {
@@ -1549,6 +1552,7 @@ function NTU_ChickenLog(_type) {
 	}
 	logMessage += COLOR_1 + "\n --------------------------------------------------";
 
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, _type);
 	SendCopyData("D2NT Manager", null, 7<<16, logMessage);	
 }
 

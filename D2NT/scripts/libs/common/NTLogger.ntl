@@ -31,6 +31,7 @@ function NTLG_Log (type, level, msg) {
 		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLG: log message dropped, wrong arguments");
 		return;
 	}
+	if (type != 0) return;
 	date = new Date();
 	ticks = date.getTime();
 	if (arguments.length == 1) {

@@ -1,6 +1,6 @@
 var CurScriptIndex = 0;
 var LastScript = false;
-var Rev = "56.f17";
+var Rev = "56.f18";
 
 // Provalone Edit //
 //Include("libs/common/NTExp.ntl");
@@ -24,7 +24,7 @@ function NTMain()
 	NTC_IncludeConfig("NTBot/char_configs");
 	
 	if (!Load("NTBot/tools/NTLogHandler.ntj")) {
-		NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_1 + "Error: Logger failed to initialize");
+		NTC_SendLogToOOGOnly(NTC_LOG_COMMON, COLOR_1 + "Error: Logger failed to initialize");
 	}
 	Delay(1000);
 

@@ -523,7 +523,6 @@ function locationAction(location)
 
 function sendEventToOOG(locationId, statusString, pendingTime)
 {
-	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, statusString);
 	return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
 }
 
