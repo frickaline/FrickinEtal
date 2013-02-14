@@ -61,7 +61,7 @@ var cdkeyInUseRetry            = 5;
 // interface delays (milliseconds)
 var connectingToBnetTimeout    = 20000;
 var characterScreenTimeout     = 10000;
-var pleaseWaitTimeout          = 10000;
+var pleaseWaitTimeout          = 20;
 var createGameThreshold        = 10000;
 var createGameThresholdRandom  = 1000;
 var createGameTimeout          = 15000;
@@ -112,10 +112,13 @@ var chatActionsDone   = false;
 var lastGameFailed     = false;
 var sayChatMsgAfterGame = false;
 
+Include("libs/common/NTCommon.ntl");
+Include("libs/common/NTLogger.ntl");
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
 
 var controlData = new controlInfo();
+NTLG_Log(NTLG_TYPE_LOG);   // initialize the log file
 
 var game = '';
 var _gamename = "";
@@ -155,10 +158,14 @@ function NTMain()
                 {
                     _ingame = true;
 
-                    if(me.playtype > 0)
-                        sendEventToOOG(D2NT_MGR_INGAME, "In Game[IP:" + me.gameserverip.split(".")[3] + "]", 0);
-                    else
-                        sendEventToOOG(D2NT_MGR_INGAME, "In Game", 0);
+					if(me.playtype > 0) {
+						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game[IP:" + me.gameserverip.split(".")[3] + "]");
+						sendEventToOOG(D2NT_MGR_INGAME, "In Game[IP:" + me.gameserverip.split(".")[3] + "]", 0);
+					} else {
+						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game");
+
+						sendEventToOOG(D2NT_MGR_INGAME, "In Game", 0);
+					}
 
                     lastGameStatus = 2; // in game successful
 
@@ -170,12 +177,14 @@ function NTMain()
             }
 
             Delay(1000);
+			NTLG_FlushLogQueue();
         }
         else
         {
             if(_ingame)
             {
                 _ingame = false;
+				NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Out of Game");
                 sayChatMsgAfterGame = true;
 
                 sendEventToOOG(D2NT_MGR_READY, "", 0);
@@ -532,13 +541,15 @@ function locationAction(location)
 
     case 25: // Lobby - Please Wait
 		pwcount++;
-		if(!locationTimeout(Math.round(pleaseWaitTimeout/10), location))
-			controlData.click(controlData.controls.lobby.pleaseWait.button.cancel);
-		if (pwcount > 10) {
+		sendEventToOOG(D2NT_MGR_PRINT_STATUS, location.name, 0);
+
+
+		if (pwcount > pleaseWaitTimeout) {
 			sendEventToOOG(D2NT_MGR_PRINT_LOG, COLOR_1 + "Excessive 'please wait' dialog ... restarting client", 0);
 			sendEventToOOG(D2NT_MGR_RESTART, "", 5);
 		}
-		break;	
+		Delay(500);
+		break;
 
     case 26: // Lobby - Game Name Exists
         sendEventToOOG(D2NT_MGR_PRINT_LOG, "yE00000Game already exists", 0);
@@ -572,13 +583,15 @@ function locationAction(location)
 		DebugInOOG("Unhandled location : "+location.id);
         break;
     }
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, "current location: "+location.id);
     DebugInOOG("Location : "+location.id);
 	if (location.id != 25) pwcount = 0;
 }
 
 function sendEventToOOG(locationId, statusString, pendingTime)
 {
-    return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
+	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, statusString);
+	return SendCopyData("D2NT Manager", null, (locationId<<16)|pendingTime, statusString);
 }
 
 function setNextGameMake()
