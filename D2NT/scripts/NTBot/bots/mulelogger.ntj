@@ -1,12 +1,12 @@
 function NTMain(){
-
 	Include("libs/common/NTCommon.ntl");
+	Include("libs/common/NTLogger.ntl");
 	NTC_IncludeLibs();
 	NTC_IncludeConfig("NTBot/char_configs");
-
-	NT_LoadConfig();
 	NTSI_LoadNIPFiles("NTBot/item_configs");
-
+	if (!Load("NTBot/tools/NTLogHandler.ntj")) {
+		NTC_SendLogToOOG(NTC_LOG_COMMON, COLOR_1 + "Error: Logger failed to initialize");
+	}
 	NTA_Initialize();
 	while(1) { Delay(500); }
 }
