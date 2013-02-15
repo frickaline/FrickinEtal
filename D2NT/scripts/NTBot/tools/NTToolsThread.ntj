@@ -2,8 +2,7 @@ var _NTLW_timerLastDrink = new Array(5);
 
 function NTMain(){
 	Include("libs/common/NTCommon.ntl");
-	Include("libs/common/NTCubing.ntl");
-	Include("libs/common/NTUtilities.ntl");
+	NTC_IncludeLibs();
 	NTC_IncludeConfig("NTBot/char_configs");
 
 	var _count = 0;
