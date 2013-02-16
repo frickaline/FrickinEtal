@@ -83,6 +83,16 @@ var waitBeforeNextLineChatMin	= 500;		// Minimum ammount of time to add after ea
 var waitBeforeNextLineChatMax	= 1500;		// Maximum ammount of time to add after each text line
 var ftjDelay = 180;							// time to idle before trying if leader failed to join.  In seconds.
 
+////////////////////////////////////////
+//        Logger Settings:            //
+//  Set these similarly in your char  //
+// config file for best results       //
+////////////////////////////////////////
+	NTEP_LoggingEnabled = true; 				// enable/disable this feature for entrypoint
+	NTEP_Log_Level = 1; 						// 0 : Debug, 1 : Info, 2 : Warning, 2 : Error; With respect to general logging
+	NTEP_TwelveHourClock = false;				// military (false) or 12 hour (true) clock timestamping on log messages
+	NTEP_maxLogSize = 10000000;					// if log file exceeds this size, file will be over-written.
+												// if you wish to preserve data, move these files once in a while to a new filename
 // DONT EDIT ANYTHING BELOW THIS
 
 // =============================================================================
@@ -114,12 +124,12 @@ var bugignor = true;
 var ftjcount = 0;
 var pwcount = 0;
 Include("libs/common/NTCommon.ntl");
-Include("libs/common/NTLogger.ntl");
 Include("libs/controlInfo.ntl");
 Include("libs/common/NTColorConverter.ntl");
+Include("/NTEP_Common.ntl");
 
 var controlData = new controlInfo();
-NTLG_Log(NTLG_TYPE_LOG);   // initialize the log file
+NTEP_Log();   // initialize the log file
 
 function NTMain()
 {
@@ -147,21 +157,20 @@ function NTMain()
 					_ingame = true;
 					NT_File("logs/messagecomands/"+me.charname+"-nextgame.txt", 1, me.gamename + "/" + me.gamepassword); // for leader to print game/pw to txt	 	
 
-					if(me.playtype > 0) {
-						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game[IP:" + me.gameserverip.split(".")[3] + "]");
-						sendEventToOOG(D2NT_MGR_INGAME, "In Game[IP:" + me.gameserverip.split(".")[3] + "]", 0);
-
-					} else {
-						NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "In Game");
-						sendEventToOOG(D2NT_MGR_INGAME, "In Game", 0);
-					}
-						Say("/f m in_new_game " + me.gamename);  // this is for leechers to join only after leader is in game
+					if(me.playtype > 0) 
+						inGameMsg = "In Game[IP:" + me.gameserverip.split(".")[3] + "]";
+					else 
+						inGameMsg = "In Game";
+					
+					NTEP_Log(NTEP_LEVEL_INFO, inGameMsg);
+					sendEventToOOG(D2NT_MGR_INGAME, inGameMsg, 0);
+					
+					Say("/f m in_new_game " + me.gamename);  // this is for leechers to join only after leader is in game
 					lastGameStatus = 2; // in game successful
 				}
 			}
 
 			Delay(1000);
-			NTLG_FlushLogQueue();
 		}
 		else
 		{
@@ -172,7 +181,7 @@ function NTMain()
 
 				_ingame = false;
 
-				NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_INFO, "Out of Game");
+				NTEP_Log(NTEP_LEVEL_INFO, "Out of Game");
 				sendEventToOOG(D2NT_MGR_READY, "", 0);
 			}
 
@@ -517,7 +526,7 @@ function locationAction(location)
 		break;
 	}
 	DebugInOOG("Location : "+location.id);
-	NTLG_Log(NTLG_TYPE_LOG, NTLG_LEVEL_DEBUG, "current location: "+location.id);
+	NTEP_Log(NTEP_LEVEL_DEBUG, "current location: "+location.id);
 	if (location.id != 25) pwcount = 0;
 }
 

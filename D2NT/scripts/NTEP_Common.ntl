@@ -1,0 +1,109 @@
+// ---------------------------
+// NTEP_Common.ntl
+// Common Entrypoint library
+// ---------------------------
+
+// ---------------------------
+// Common Stuff for EP Logger
+// ---------------------------
+
+// Log container
+var _NTEP_LogList = new Array();
+
+// Logger Message Types
+const NTEP_TYPE_LOG = 0;
+const NTEP_TYPE_ITEM = 1;
+
+// Message Levels
+const NTEP_LEVEL_DEBUG = 0;
+const NTEP_LEVEL_INFO = 1;
+const NTEP_LEVEL_WARN = 2;
+const NTEP_LEVEL_ERROR = 3;
+const NTEP_LEVEL_ITEM_WHITE = 0;
+const NTEP_LEVEL_ITEM_MAGIC = 1;
+const NTEP_LEVEL_ITEM_RARE = 2;
+const NTEP_LEVEL_ITEM_CRAFT = 3;
+const NTEP_LEVEL_ITEM_UNIQUE = 4;
+
+function NTEP_Log (level, msg) {
+	if (!NTEP_LoggingEnabled) return;
+	if (arguments.length > 2 || arguments.length == 1) {
+		NTEP_Error(NTEP_TYPE_LOG, COLOR_1 + "NTEP: log message dropped, wrong arguments");
+		return;
+	}
+	filename = "logs/Logger/" + me.account + "-" + me.charloc + "-log.txt";
+	if (!arguments.length == 0) { 
+		if (level < NTEP_Log_Level) return;
+		date = new Date();
+		ticks = date.getTime();
+		NTEP_FormatAndLogLine(filename, ticks, level, msg);
+	} else { 
+		date = new Date();
+		ticks = date.getTime();
+		NTEP_InitLog(filename, ticks)
+	}
+}
+
+function NTEP_LogLine(filename, ticks, level, message) {
+	file = FileOpen(filename, 2);
+	time = NTEP_TimeStamp(ticks);
+	file.WriteLine(time + ": " + level + ": " + message);
+	file.Close();
+}
+
+function NTEP_InitLog(filename, ticks) {
+	file = FileOpen(filename, 2);
+	time = NTEP_TimeStamp(ticks);
+	if (file.size == 0) {
+		SendCopyData("D2NT Manager", null, 9<<16, COLOR_2 + "NTEP_InitLog: Log Created: " + filename);
+		file.WriteLine(time + ": " + "Log File Created");	
+	}
+	if (file.size > NTEP_maxLogSize) {
+		file.Close();
+		SendCopyData("D2NT Manager", null, 9<<16, COLOR_1 + "NTEP_InitLog: Log Initialized: " + filename);
+		file = FileOpen(filename, 1);
+		file.WriteLine(time + ": " + "Log File Initialized");	
+	}
+	file.Close();
+}
+
+function NTEP_FormatAndLogLine(filename, ticks, level, message) {
+	var color="0";
+	if (message.match(/^ÿc/)) {
+		color = message.substring(2).substring(0,1);
+		message = message.substring(3);
+	}
+	if (color=="1") level = 3; else level = 1;
+	NTEP_LogLine(filename, ticks, level, message);
+}
+
+function NTEP_Error(type, msg) {
+	SendCopyData("D2NT Manager", null, 9<<16|type, msg);
+	return;
+}
+
+function NTEP_TimeStamp(ticks) {
+	if (NTConfig_TwelveHourClock == 'undefined') var NTConfig_TwelveHourClock = false;
+	var time = new Date();
+	time.setTime(ticks);
+	var hour   = time.getHours();
+	var minute = time.getMinutes();
+	var second = time.getSeconds();
+	var millisecond = time.getMilliseconds();
+	if (NTConfig_TwelveHourClock) {
+		var DoN = "AM";
+		if (hour > 11) { DoN = "PM"; }
+		if (hour > 12) { hour = hour - 12; }
+		if (hour == 0) { hour = 12; }
+	}
+	if (hour < 10) { hour = "0" + hour; }
+	if (minute < 10) { minute = "0" + minute; }
+	if (second < 10) { second = "0" + second; }
+	if (String(millisecond).length == 2) { millisecond = millisecond + "0"; }
+	if (String(millisecond).length == 1) { millisecond = millisecond + "00"; }
+	if (NTConfig_TwelveHourClock)
+		timeString = hour +	':' +  minute + ':' + second + '.' + millisecond + " " + DoN;
+	else
+		timeString = hour +	':' +  minute + ':' + second + '.' + millisecond;
+	return timeString;
+}
