@@ -29,11 +29,11 @@ function scriptMsgEvents(msg) {
 	switch(type) {
 		case NTLG_TYPE_LOG:
 			if (level < NTConfig_Log_Level) return;
-			filename = "logs/Logger/" + me.account + "-" + me.charname + "-log.txt";
+			filename = "logs/Logger/" + me.account + "-" + me.charloc + "-log.txt";
 			break;
 		case NTLG_TYPE_ITEM:
 			if (level < NTConfig_Item_Level) return;
-			filename = "logs/Logger/" + me.account + "-" + me.charname + "-item.txt";
+			filename = "logs/Logger/" + me.account + "-" + me.charloc + "-item.txt";
 			break;
 		default:
 			NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLogHandler: invalid log message (type) dropped");

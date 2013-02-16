@@ -1,4 +1,4 @@
-﻿// Global log variable
+﻿// Global log container
 var _NTLG_LogList = new Array();
 
 // Logger Message Types
