@@ -56,13 +56,13 @@ function NTEP_InitLog(filename, ticks) {
 	time = NTEP_TimeStamp(ticks);
 	if (file.size == 0) {
 		SendCopyData("D2NT Manager", null, 9<<16, COLOR_2 + "NTEP_InitLog: Log Created: " + filename);
-		file.WriteLine(time + ": " + "Log File Created");	
+		file.WriteLine(time + ": 1: " + "Log File Created");	
 	}
 	if (file.size > NTEP_maxLogSize) {
 		file.Close();
 		SendCopyData("D2NT Manager", null, 9<<16, COLOR_1 + "NTEP_InitLog: Log Initialized: " + filename);
 		file = FileOpen(filename, 1);
-		file.WriteLine(time + ": " + "Log File Initialized");	
+		file.WriteLine(time + ": 1: " + "Log File Initialized");	
 	}
 	file.Close();
 }

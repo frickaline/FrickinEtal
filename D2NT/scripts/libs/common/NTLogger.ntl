@@ -111,13 +111,13 @@ function NTLG_InitLog(filename, ticks) {
 	time = NTLG_TimeStamp(ticks);
 	if (file.size == 0) {
 		SendCopyData("D2NT Manager", null, 9<<16, COLOR_2 + "NTLogHandler: Log Created: " + filename);
-		file.WriteLine(time + ": " + "Created");	
+		file.WriteLine(time + ": 1: " + "Created");	
 	}
 	if (file.size > NTConfig_maxLogSize) {
 		file.Close();
 		SendCopyData("D2NT Manager", null, 9<<16, COLOR_1 + "NTLogHandler: Log Initialized: " + filename);
 		file = FileOpen(filename, 1);
-		file.WriteLine(time + ": " + "Initialized");	
+		file.WriteLine(time + ": 1: " + "Initialized");	
 	}
 	file.Close();
 }
