@@ -168,7 +168,6 @@ function NTLG_UnqueueMsgs(ticks){
 			msg = _NTLG_ReassemblyList[i].pop();
 			_NTLG_ReassemblyList.splice(i,1);
 			returnMsg = returnMsg + msg;
-			NTLG_Error(0, COLOR_3+"Adding: "+msg);
 		}
 	}
 	return returnMsg;
