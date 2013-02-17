@@ -40,7 +40,6 @@ function scriptMsgEvents(msg) {
 		default:
 			NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLogHandler: invalid log message (type) dropped");
 	}
-	NTLG_Error(NTLG_TYPE_LOG, "eom: "+eom);
 	if (eom == "0") {
 		NTLG_QueueMsg(ticks,type,level,message);
 	} else {
