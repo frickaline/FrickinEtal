@@ -44,11 +44,11 @@ function scriptMsgEvents(msg) {
 		NTLG_QueueMsg(ticks,type,level,message);
 	} else {
 		message = NTLG_UnqueueMsgs(ticks) + message;
-	}
-	if (message == "") {
-		NTLG_InitLog(filename, ticks);
-	} else {
-		NTLG_FormatAndLogLine(filename, ticks, level, message);
+		if (message == "") {
+			NTLG_InitLog(filename, ticks);
+		} else {
+			NTLG_FormatAndLogLine(filename, ticks, level, message);
+		}
 	}
 }
 
