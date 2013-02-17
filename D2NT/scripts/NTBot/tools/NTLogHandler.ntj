@@ -15,17 +15,19 @@ function NTMain() {
 	}
 }
 
-// log msgs are of the format: scriptname, ticks, type, level, msg separated by NTLG_DELIM
+// log msgs are of the format: ticks, type, level, msg, eom separated by NTLG_DELIM
 function scriptMsgEvents(msg) {
     log = msg.split(NTLG_DELIM);
-    if (log.length != 4) {
+    if (log.length != 5) {
 		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLogHandler: invalid log message dropped");
+		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLogHandler: "+msg);
 		return;
 	} 
 	ticks = parseInt(log[0]);
 	type = parseInt(log[1]);
 	level = parseInt(log[2]);
 	message = log[3];
+	eom = log[4];
 	switch(type) {
 		case NTLG_TYPE_LOG:
 			if (level < NTConfig_Log_Level) return;
@@ -37,6 +39,12 @@ function scriptMsgEvents(msg) {
 			break;
 		default:
 			NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLogHandler: invalid log message (type) dropped");
+	}
+	NTLG_Error(NTLG_TYPE_LOG, "eom: "+eom);
+	if (eom == "0") {
+		NTLG_QueueMsg(ticks,type,level,message);
+	} else {
+		message = NTLG_UnqueueMsgs(ticks) + message;
 	}
 	if (message == "") {
 		NTLG_InitLog(filename, ticks);

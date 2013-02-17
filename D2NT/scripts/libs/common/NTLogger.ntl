@@ -1,5 +1,6 @@
 ﻿// Global log container
 var _NTLG_LogList = new Array();
+var _NTLG_ReassemblyList = new Array();
 
 // Logger Message Types
 const NTLG_TYPE_LOG = 0;
@@ -40,24 +41,27 @@ function NTLG_Log (type, level, msg) {
 	}
 	regex = new RegExp(NTLG_DELIM, "g");
 	msg = msg.replace(regex, NTLG_DELIM_REPLACE);
-	maxmsglength = maxbufferlength - (3 * String(NTLG_DELIM).length) - String(ticks).length - String(type).length - String(level).length;
+	maxmsglength = maxbufferlength - (4 * String(NTLG_DELIM).length) - String(ticks).length - String(type).length - String(level).length - 1;
 	while (msg.length > maxmsglength) {
 		msgTrunc = msg.substr(0,maxmsglength);
 		msgTrunc = msgTrunc.replace(/^\s+|\s+$/g, "");
 		msg = msg.substr(maxmsglength);
-		NTLG_LogEvent(ticks, type, level, msgTrunc);
+		eom = "0";
+		NTLG_LogEvent(ticks, type, level, msgTrunc, eom);
 	}
-	msg = msg.replace(/^\s+|\s+$/g, "");
-	NTLG_LogEvent(ticks, type, level, msg);
+	eom = "1";
+	NTLG_LogEvent(ticks, type, level, msg, eom);
 }
 
-function NTLG_LogEvent(ticks, type, level, msg) {
-	logged = NTC_SendMsgToScript("NTLogHandler.ntj", ticks + NTLG_DELIM + type + NTLG_DELIM + level + NTLG_DELIM + msg);
-	if (!logged) NTLG_QueueLogEvent(ticks, type, level, msg);
+function NTLG_LogEvent(ticks, type, level, msg, eom) {
+	logged = NTC_SendMsgToScript("NTLogHandler.ntj", ticks + NTLG_DELIM + type + NTLG_DELIM + level + NTLG_DELIM + msg + NTLG_DELIM + eom);
+	if (!logged) NTLG_QueueLogEvent(ticks, type, level, msg, eom);
 }
 
-function NTLG_QueueLogEvent(ticks, type, level, msg) {
+function NTLG_QueueLogEvent(ticks, type, level, msg, eom) {
+	if (_NTLG_LogList.length > NTLG_LOGLIMIT) NTLG_FlushLogQueue();
 	var _entry = new Array();
+	_entry.push(eom);
 	_entry.push(msg);
 	_entry.push(level);
 	_entry.push(type);
@@ -66,35 +70,17 @@ function NTLG_QueueLogEvent(ticks, type, level, msg) {
 }
 
 function NTLG_FlushLogQueue() {
-	if (_NTLG_LogList.length > NTLG_LOGLIMIT) {
-		NTLG_Error(NTLG_TYPE_LOG, COLOR_1 + "NTLG_FlushLogQueue: buffered length exceeds limit, flushing "+ _NTLG_LogList.length +" messages");
-		NTLG_EmergencyFlushLogQueue();
-		return;
-	}
-	_logList = _NTLG_LogList;
-	_NTLG_LogList = new Array();
-	for(i = 0 ; i < _logList.length ; i++) {
-		ticks = _logList[i].pop();
-		type = _logList[i].pop();
-		level = _logList[i].pop();
-		msg = _logList[i].pop();
-		NTLG_LogEvent(ticks, type, level, msg);
-	}
-}
-
-function NTLG_EmergencyFlushLogQueue() {
 	date = new Date();
 	now = date.getTime();
-	_logList = _NTLG_LogList;
-	_NTLG_LogList = new Array();
 	filename = "logs/Logger/" + me.account + "-" + me.charname + "-item.txt";
-	NTLG_LogLine(filename, now, 3, "NTLG_EmergencyFlushLogQueue: buffered length exceeds limit, flushing "+ _logList.length +" messages");
-	for(i = 0 ; i < _logList.length ; i++) {
-		ticks = _logList[i].pop();
-		type = _logList[i].pop();
-		level = _logList[i].pop();
-		msg = _logList[i].pop();
+	NTLG_LogLine(filename, now, 3, "NTLG_FlushLogQueue: buffered length exceeds limit, flushing "+ _NTLG_LogList.length +" messages");
+	for(i = 0 ; i < _NTLG_LogList.length ; i++) {
+		ticks = _NTLG_LogList[i].pop();
+		type = _NTLG_LogList[i].pop();
+		level = _NTLG_LogList[i].pop();
+		msg = _NTLG_LogList[i].pop();
 		time = NTLG_TimeStamp(ticks);
+		_NTLG_LogList.splice(i,1);
 		NTLG_LogLine(filename, ticks, level, msg);
 	}
 }
@@ -161,4 +147,29 @@ function NTLG_FormatAndLogLine(filename, ticks, level, message) {
 	}
 	if (color=="1") level = 3; else level = 1;
 	NTLG_LogLine(filename, ticks, level, message);
+}
+
+function NTLG_QueueMsg(ticks,type,level,message) {
+	var _entry = new Array();
+	_entry.push(message);
+	_entry.push(level);
+	_entry.push(type);
+	_entry.push(ticks);
+	_NTLG_ReassemblyList.push(_entry);
+}
+
+function NTLG_UnqueueMsgs(ticks){
+	var returnMsg = "";
+	for (i = 0 ; i < _NTLG_ReassemblyList.length ; i++) {
+		if (_NTLG_ReassemblyList[i][3] == ticks) {
+			ticks = _NTLG_ReassemblyList[i].pop();
+			type = _NTLG_ReassemblyList[i].pop();
+			level = _NTLG_ReassemblyList[i].pop();
+			msg = _NTLG_ReassemblyList[i].pop();
+			_NTLG_ReassemblyList.splice(i,1);
+			returnMsg = returnMsg + msg;
+			NTLG_Error(0, COLOR_3+"Adding: "+msg);
+		}
+	}
+	return returnMsg;
 }
